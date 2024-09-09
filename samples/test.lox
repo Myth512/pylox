@@ -1,0 +1,5 @@
+fun printSum(a, b) {
+	print a + b;
+}
+
+printSum(1, 5);
