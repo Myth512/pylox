@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from Expr import *
-from LoxCallable import LoxCallable
 from LoxFunction import LoxFunction 
+from ReturnException import ReturnException
 
 class Stmt:
     @abstractmethod
@@ -118,3 +118,21 @@ class Function(Stmt):
 
     def __str__(self):
         return f"<fn {self.name}>"
+
+
+class Return(Stmt):
+    def __init__(self, keyword, value: Expr):
+        self.keyword = keyword
+        self.value = value
+    
+
+    def execute(self, environment):
+        value = None
+        if self.value != None:
+            value = self.value.evaluate(environment)
+        
+        raise ReturnException(value)
+
+
+    def __str__(self):
+        return f"(return {self.value})"

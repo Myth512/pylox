@@ -87,6 +87,8 @@ class Parser:
             return self.forStmt()
         if self.match(TokenType.PRINT):
             return self.printStmt()
+        if self.match(TokenType.RETURN):
+            return self.returnStmt()
         if self.match(TokenType.LEFT_BRACE):
             return self.block()
         return self.exprStmt()
@@ -174,6 +176,18 @@ class Parser:
         value = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
         return Print(value)
+
+
+    def returnStmt(self) -> Stmt:
+        keyword = self.previous()
+
+        value = None
+        if not self.check(TokenType.SEMICOLON):
+            value = self.expression()
+        
+        self.consume(TokenType.SEMICOLON, "Expect ';' after return value.")
+
+        return Return(keyword, value)
 
 
     def block(self) -> Stmt:
