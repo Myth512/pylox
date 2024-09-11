@@ -113,7 +113,7 @@ class Function(Stmt):
     
 
     def execute(self, environment):
-        environment.values[self.name] = LoxFunction(self)
+        environment.values[self.name] = LoxFunction(self, environment)
     
 
     def __str__(self):

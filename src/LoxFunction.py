@@ -3,12 +3,13 @@ from Environment import Environment
 from ReturnException import ReturnException
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration):
+    def __init__(self, declaration, closure):
         self.declaration = declaration
+        self.closure = closure
     
 
     def call(self, environment, arguments):
-        newEnvironment = Environment(environment)
+        newEnvironment = Environment(self.closure)
 
         for i in range(len(self.declaration.parameters)):
             newEnvironment.values[self.declaration.parameters[i].data] = arguments[i]
