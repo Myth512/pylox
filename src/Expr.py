@@ -5,7 +5,12 @@ from Environment import *
 
 class Expr(ABC):
     @abstractmethod
-    def evaluate(self, environment):
+    def evaluate(self, interpreter):
+        pass
+
+
+    @abstractmethod
+    def resolve(self, resolver):
         pass
 
 
@@ -16,9 +21,9 @@ class BinaryExpr(Expr):
         self.right: Expr = right
 
     
-    def evaluate(self, environment):
-        left = self.left.evaluate(environment)
-        right = self.right.evaluate(environment)
+    def evaluate(self, interpreter):
+        left = self.left.evaluate(interpreter)
+        right = self.right.evaluate(interpreter)
 
         match(self.operator.type):
             case TokenType.PLUS:
@@ -49,6 +54,10 @@ class BinaryExpr(Expr):
             case TokenType.BANG_EQUAL:
                 return left != right
 
+
+    def resolve(self, resolver):
+        self.left.resolve(resolver)
+        self.right.resolve(resolver)
     
     def __str__(self):
         return f'({self.left} {self.operator.type.name} {self.right})'
@@ -60,14 +69,18 @@ class UnaryExpr(Expr):
         self.right: Expr = right
 
     
-    def evaluate(self, environment):
-        right = self.right.evaluate(environment)
+    def evaluate(self, interpreter):
+        right = self.right.evaluate(interpreter)
 
         match(self.operator.type):
             case TokenType.MINUS:
                 return -right
             case TokenType.BANG:
                 return not right
+    
+
+    def resolve(self, resolver):
+        self.right.resolve(resolver)
 
     def __str__(self):
         return f'({self.operator.type.name} {self.right})'
@@ -75,12 +88,15 @@ class UnaryExpr(Expr):
 
 class LiteralExpr(Expr):
     def __init__(self, value):
-        self.value: float = value
+        self.value = value
 
 
-    def evaluate(self, environment):
+    def evaluate(self, interpreter):
         return self.value if self.value != None else "nil"
 
+
+    def resolve(self, resolver):
+        return
 
     def __str__(self):
         if self.value == None:
@@ -97,12 +113,17 @@ class LogicalExpr(Expr):
         self.right = right
 
     
-    def evaluate(self, environment):
+    def evaluate(self, interpeter):
         match(self.operator.type):
             case TokenType.OR:
-                return self.left.evaluate(environment) or self.right.evaluate(environment)
+                return self.left.evaluate(interpeter) or self.right.evaluate(interpeter)
             case TokenType.AND:
-                return self.left.evaluate(environment) and self.right.evaluate(environment)
+                return self.left.evaluate(interpeter) and self.right.evaluate(interpeter)
+    
+    
+    def resolve(self, resolver):
+        self.left.resolve(resolver)
+        self.right.resolve(resolver)
     
 
     def __str__(self):
@@ -114,8 +135,12 @@ class GroupingExpr(Expr):
         self.expression: Expr = expression
 
 
-    def evaluate(self, environment):
-        return self.expression.evaluate(environment)
+    def evaluate(self, interpeter):
+        return self.expression.evaluate(interpeter)
+    
+
+    def resolve(self, resolver):
+        self.expression.resolve(resolver)
 
     
     def __str__(self):
@@ -127,15 +152,18 @@ class VarExpr(Expr):
         self.name = name
 
     
-    def evaluate(self, environment: Environment):
-        if self.name in environment.values:
-            value = environment.values[self.name]
-            return value if value != None else 'nil' 
-        elif environment.enclosing:
-            value = self.evaluate(environment.enclosing)
-            return value if value != None else 'nil' 
-        print(f"Undefined variable {self.name}")
-        exit(1)
+    def evaluate(self, interpreter):
+        return interpreter.lookUpVar(self.name, self)
+    
+    
+    def resolve(self, resolver):
+        if resolver.scopes[-1].get(self.name, True) == False:
+            print("Can't use variable in its own declaration.")
+            exit(1)
+        for i in range(len(resolver.scopes) - 1, -1, -1):
+            if self.name in resolver.scopes[i]:
+                resolver.interpreter.resolve(self, len(resolver.scopes) - i - 1)
+                return
 
     
     def __str__(self):
@@ -148,17 +176,19 @@ class AssignExpr(Expr):
         self.expression = expression
     
 
-    def evaluate(self, environment):
-        if self.name in environment.values:
-            value = self.expression.evaluate(environment)
-            environment.values[self.name] = value
-            return value
-        elif environment.enclosing:
-            self.evaluate(environment.enclosing)
-        else:
-            print(f"Undeclared variable {self.name}")
-            exit(1)
+    def evaluate(self, interpreter):
+        dist = interpreter.locals[self]
+        value = self.expression.evaluate(interpreter)
+        interpreter.environment.assignAt(dist, self.name, value)
     
+
+    def resolve(self, resolver):
+        self.expression.resolve(resolver)
+        for i in range(len(resolver.scopes) - 1, -1, -1):
+            if self.name in resolver.scopes[i]:
+                resolver.interpreter.resolve(self, len(resolver.scopes) - i - 1)
+                return
+
 
     def __str__(self):
         return f'(assign {self.name} = {self.expression})'
@@ -171,19 +201,35 @@ class CallExpr(Expr):
         self.arguments: list[Expr] = arguments
 
 
-    def evaluate(self, environment):
-        callee = self.callee.evaluate(environment)
+    def evaluate(self, interpeter):
+        callee = self.callee.evaluate(interpeter)
         if not isinstance(callee, LoxCallable):
             print("Can only call functions and classes.")
             exit(1)
 
         arguments = []
         for argument in self.arguments:
-            arguments.append(argument.evaluate(environment))
+            arguments.append(argument.evaluate(interpeter))
 
         if len(arguments) != callee.arity():
             print(f"Expected {callee.arity()} arguments but got {len(arguments)}.") 
             exit(1)
-        return callee.call(environment, arguments)
+        return callee.call(interpeter, arguments)
+    
+
+    def resolve(self, resolver):
+        self.callee.resolve(resolver)
+
+        for arg in self.arguments:
+            arg.resolve(resolver)
+
+        for i in range(len(resolver.scopes) - 1, -1, -1):
+            if self.callee.name in resolver.scopes[i]:
+                resolver.interpreter.resolve(self, len(resolver.scopes) - i - 1)
+                return
+    
+
+    def __str__(self):
+        return "call"
     
 

@@ -20,13 +20,25 @@ class Interpreter:
     def __init__(self, statements: list[Stmt]):
         self.statements = statements
         self.environment = Environment() 
+        self.locals = dict()
         self.environment.values["clock"] = ClockFn()
 
     
     def interpret(self):
-        try:
-            for statement in self.statements:
-                statement.execute(self.environment)
-        except Exception as e:
-            print("Runtime error", {e})
-            exit(1)
+        # try:
+        for statement in self.statements:
+            statement.execute(self)
+        # except Exception as e:
+        #     print("Runtime error", {e})
+        #     exit(1)
+    
+
+    def resolve(self, expr, depth):
+        self.locals[expr] = depth
+    
+
+    def lookUpVar(self, name, expr):
+        if (expr not in self.locals):
+            print("unknow reference", name)
+        dist = self.locals[expr]
+        return self.environment.getAt(dist, name)

@@ -8,16 +8,19 @@ class LoxFunction(LoxCallable):
         self.closure = closure
     
 
-    def call(self, environment, arguments):
-        newEnvironment = Environment(self.closure)
+    def call(self, interpreter, arguments):
+        tmp = interpreter.environment
+        interpreter.environment = Environment(self.closure)
 
         for i in range(len(self.declaration.parameters)):
-            newEnvironment.values[self.declaration.parameters[i].data] = arguments[i]
+            interpreter.environment.values[self.declaration.parameters[i].data] = arguments[i]
         
         try:
-            self.declaration.body.execute(newEnvironment)
+            self.declaration.body.execute(interpreter)
         except ReturnException as e:
             return e.value
+        finally:
+            interpreter.environment = tmp 
     
 
     def arity(self):

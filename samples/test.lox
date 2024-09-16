@@ -1,17 +1,23 @@
-var a = 10;
-
-fun makeCounter() {
-	var i = a;
-	fun count() {
-		i = i + 1;
-		print i;
-	}
-	
-	return count;
+fun makeLogger(tag) {
+    fun log(message) {
+        print tag + ": " + message;
+    }
+    return log;
 }
 
-var counter = makeCounter();
+var infoLogger = makeLogger("INFO");
+var errorLogger = makeLogger("ERROR");
 
-counter();
-counter();
-counter();
+infoLogger("This is an info message");
+errorLogger("This is an error message");
+
+{
+    var debugLogger = makeLogger("DEBUG");
+    {
+    	debugLogger("This is a debug message");
+    }
+}
+
+infoLogger("Another info message");
+errorLogger("Another error message");
+

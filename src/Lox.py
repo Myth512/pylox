@@ -3,6 +3,7 @@ from Token import *
 from Scanner import *
 from Parser import *
 from Interpreter import *
+from Resolver import Resolver
 
 class Lox:
     def run(self, source: str) -> None:
@@ -18,6 +19,9 @@ class Lox:
         #     print(statement)
         # print("\nInterpreter")
         interpreter = Interpreter(statements)
+        resolver = Resolver(interpreter)
+        resolver.resolve()
+        # print(interpreter.locals)
         interpreter.interpret()
 
 
