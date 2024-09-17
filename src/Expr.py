@@ -288,6 +288,9 @@ class ThisExpr(Expr):
     
     
     def resolve(self, resolver):
+        if resolver.currentFunction != 'method':
+            print("Can't use 'this' outside of a class.")
+            exit(1)
         resolver.resolveLocal(self.keyword, 'this')
     
 

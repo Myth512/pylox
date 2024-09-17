@@ -96,7 +96,7 @@ class Parser:
 
         self.consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
         body = self.block()
-        return Function(name, parameters, body)
+        return Function(name, parameters, body, kind)
     
 
     def classDeclaration(self):

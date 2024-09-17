@@ -148,10 +148,11 @@ class While(Stmt):
 
 
 class Function(Stmt):
-    def __init__(self, name, parameters, body):
+    def __init__(self, name, parameters, body, kind):
         self.name = name
         self.parameters = parameters
         self.body = body
+        self.kind = kind
     
 
     def execute(self, interpreter):
@@ -161,12 +162,21 @@ class Function(Stmt):
     def resolve(self, resolver):
         resolver.declare(self.name)
         resolver.define(self.name)
+
+        enclosingFunction = resolver.currentFunction
+        resolver.currentFunction = self.kind
+
         resolver.beginScope()
+
         for parameter in self.parameters:
             resolver.declare(parameter.data)
             resolver.define(parameter.data)
+
         self.body.resolve(resolver)
+
         resolver.endScope()
+
+        resolver.currentFunction = enclosingFunction
 
 
     def __str__(self):
@@ -188,6 +198,9 @@ class Return(Stmt):
     
 
     def resolve(self, resolver):
+        if resolver.currentFunction == "None":
+            print("Can't return from top-level code.")
+            exit(1)
         self.value.resolve(resolver)
 
 

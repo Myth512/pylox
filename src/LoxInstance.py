@@ -21,5 +21,5 @@ class LoxInstance:
 
 
     def __str__(self):
-        return f"(instance of {self.klass.name}, {self.fields})"
+        return f"instance of {self.klass.name}"
     

@@ -1,6 +1,7 @@
 class Cake {
 	init(flavor) {
 		this.flavor = flavor;
+		return "message";
 	}
 
 	taste() {
@@ -9,7 +10,12 @@ class Cake {
 	}
 }
 
-var cake = Cake();
-cake.init("Blueberry");
-var tasteFunc = cake.taste;
-tasteFunc();
+fun init(x) {
+	print x;
+}
+
+var a = init(10);
+print a;
+var cake = Cake("Gooseberry");
+var b = cake.init("Cherry");
+print b;

@@ -1,17 +1,11 @@
 from enum import Enum
 
-FunctionType = Enum('FunctionType', [
-    'NONE',
-    'FUNCTION',
-    'METHOD'
-])
-
 class Resolver:
     def __init__(self, interpreter):
         self.interpreter = interpreter
         self.scopes = []
         self.scopes.append(dict())
-        self.currentFunction = FunctionType.NONE
+        self.currentFunction = 'None' 
     
 
     def resolve(self):

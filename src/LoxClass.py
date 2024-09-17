@@ -9,8 +9,13 @@ class LoxClass(LoxCallable):
     
 
     def call(self, envitonment, arguments):
-        return LoxInstance(self)
+        instance = LoxInstance(self)
+        if "init" in self.methods:
+            self.methods["init"].bind(instance).call(envitonment, arguments)
+        return instance
     
 
     def arity(self):
+        if "init" in self.methods:
+            return self.methods["init"].arity()
         return 0 

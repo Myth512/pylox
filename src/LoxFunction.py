@@ -21,6 +21,10 @@ class LoxFunction(LoxCallable):
             return e.value
         finally:
             interpreter.environment = tmp 
+        
+        if self.declaration.name == 'init' and self.declaration.kind == 'method':
+            return self.closure.values['this']
+        return 'nil'
     
 
     def arity(self):
