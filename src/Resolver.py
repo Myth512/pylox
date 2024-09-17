@@ -43,3 +43,10 @@ class Resolver:
             return
         
         self.scopes[-1][name] = True
+    
+
+    def resolveLocal(self, expr, name):
+        for i in range(len(self.scopes) - 1, -1, -1):
+            if name in self.scopes[i]:
+                self.interpreter.resolve(expr, len(self.scopes) - i - 1)
+                return

@@ -3,6 +3,7 @@ from Expr import *
 from LoxFunction import LoxFunction 
 from ReturnException import ReturnException
 from Resolver import Resolver
+from LoxClass import LoxClass
 
 class Stmt:
     @abstractmethod
@@ -192,3 +193,35 @@ class Return(Stmt):
 
     def __str__(self):
         return f"(return {self.value})"
+
+
+class Class(Stmt):
+    def __init__(self, name, methods):
+        self.name = name
+        self.methods = methods
+    
+
+    def execute(self, interpreter):
+        methods = {}
+        for method in self.methods:
+            function = LoxFunction(method, interpreter.environment)
+            methods[method.name] = function
+        klass = LoxClass(self.name, methods)
+        interpreter.environment.values[self.name] = klass
+
+    
+    def resolve(self, resolver):
+        resolver.declare(self.name)
+        resolver.define(self.name)
+
+        resolver.beginScope()
+        resolver.scopes[-1]['this'] = True
+
+        for method in self.methods:
+            method.resolve(resolver)
+        
+        resolver.endScope()
+
+    
+    def __str__(self):
+        return f"(class {self.name})"

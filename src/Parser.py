@@ -62,6 +62,10 @@ class Parser:
     def declaration(self):
         if self.match(TokenType.VAR):
             return self.varDeclaration()
+        if self.match(TokenType.FUN):
+            return self.function("function")
+        if self.match(TokenType.CLASS):
+            return self.classDeclaration()
         return self.statement()
 
 
@@ -74,24 +78,6 @@ class Parser:
 
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, value)
-
-
-    def statement(self) -> Stmt:
-        if self.match(TokenType.FUN):
-            return self.function("function")
-        if self.match(TokenType.IF):
-            return self.ifStmt()
-        if self.match(TokenType.WHILE):
-            return self.whileStmt()
-        if self.match(TokenType.FOR):
-            return self.forStmt()
-        if self.match(TokenType.PRINT):
-            return self.printStmt()
-        if self.match(TokenType.RETURN):
-            return self.returnStmt()
-        if self.match(TokenType.LEFT_BRACE):
-            return self.block()
-        return self.exprStmt()
 
 
     def function(self, kind) -> Stmt:
@@ -111,6 +97,35 @@ class Parser:
         self.consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
         body = self.block()
         return Function(name, parameters, body)
+    
+
+    def classDeclaration(self):
+        name = self.consume(TokenType.IDENTIFIER, "Expect class name.").data
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+
+        methods = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.reachEnd():
+            methods.append(self.function("method"))
+        
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+    
+        return Class(name, methods)
+
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.IF):
+            return self.ifStmt()
+        if self.match(TokenType.WHILE):
+            return self.whileStmt()
+        if self.match(TokenType.FOR):
+            return self.forStmt()
+        if self.match(TokenType.PRINT):
+            return self.printStmt()
+        if self.match(TokenType.RETURN):
+            return self.returnStmt()
+        if self.match(TokenType.LEFT_BRACE):
+            return self.block()
+        return self.exprStmt()
 
 
     def ifStmt(self) -> Stmt:
@@ -221,6 +236,8 @@ class Parser:
             if isinstance(expr, VarExpr):
                 name = expr.name
                 return AssignExpr(name, value)
+            elif isinstance(expr, GetExpr):
+                return SetExpr(expr.obj, expr.name, value)
             
             print(equals, "Invalid assignment target")
             exit(1)
@@ -309,6 +326,9 @@ class Parser:
         while True:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self.finishCall(expr)
+            elif self.match(TokenType.DOT):
+                name = self.consume(TokenType.IDENTIFIER, "Expect property name after '.'.").data
+                expr = GetExpr(expr, name)
             else:
                 break
         
@@ -338,6 +358,8 @@ class Parser:
             return LiteralExpr(None)
         if self.match(TokenType.IDENTIFIER):
             return VarExpr(self.previous().data)
+        if self.match(TokenType.THIS):
+            return ThisExpr(self.previous())
         
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return LiteralExpr(self.previous().data)

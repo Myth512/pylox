@@ -1,7 +1,8 @@
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from Token import * 
 from LoxCallable import LoxCallable
 from Environment import *
+from LoxInstance import LoxInstance
 
 class Expr(ABC):
     @abstractmethod
@@ -160,10 +161,7 @@ class VarExpr(Expr):
         if resolver.scopes[-1].get(self.name, True) == False:
             print("Can't use variable in its own declaration.")
             exit(1)
-        for i in range(len(resolver.scopes) - 1, -1, -1):
-            if self.name in resolver.scopes[i]:
-                resolver.interpreter.resolve(self, len(resolver.scopes) - i - 1)
-                return
+        resolver.resolveLocal(self, self.name)
 
     
     def __str__(self):
@@ -184,10 +182,7 @@ class AssignExpr(Expr):
 
     def resolve(self, resolver):
         self.expression.resolve(resolver)
-        for i in range(len(resolver.scopes) - 1, -1, -1):
-            if self.name in resolver.scopes[i]:
-                resolver.interpreter.resolve(self, len(resolver.scopes) - i - 1)
-                return
+        resolver.resolveLocal(self, self.name)
 
 
     def __str__(self):
@@ -232,4 +227,70 @@ class CallExpr(Expr):
     def __str__(self):
         return "call"
     
+
+class GetExpr(Expr):
+    def __init__(self, obj, name):
+        self.obj = obj
+        self.name = name
+    
+
+    def evaluate(self, interpreter):
+        obj = self.obj.evaluate(interpreter)
+        if isinstance(obj, LoxInstance):
+            return obj.get(self.name)
+        print("Only instances have properties.")
+        exit(1)
+    
+
+    def resolve(self, resolver):
+        self.obj.resolve(resolver)
+    
+
+    def __str__(self):
+        return f"(get {self.name})"
+
+
+class SetExpr(Expr):
+    def __init__(self, obj, name, value):
+        self.obj = obj
+        self.name = name
+        self.value = value
+    
+
+    def evaluate(self, interpreter):
+        obj = self.obj.evaluate(interpreter)
+
+        if not isinstance(obj, LoxInstance):
+            print("Only instances have fields.")
+            exit(1)
+        
+        value = self.value.evaluate(interpreter)
+        obj.set(self.name, value)
+        return value
+    
+
+    def resolve(self, resolver):
+        self.obj.resolve(resolver)
+        self.value.resolve(resolver)
+    
+
+    def __str__(self):
+        return f"(set {self.name})"
+
+
+class ThisExpr(Expr):
+    def __init__(self, keyword):
+        self.keyword = keyword
+    
+
+    def evaluate(self, interpreter):
+        return interpreter.lookUpVar('this', self.keyword)
+    
+    
+    def resolve(self, resolver):
+        resolver.resolveLocal(self.keyword, 'this')
+    
+
+    def __str__(self):
+        return f"(this {self.keyword})"
 
