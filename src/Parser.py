@@ -101,6 +101,12 @@ class Parser:
 
     def classDeclaration(self):
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.").data
+
+        superclass = None
+        if self.match(TokenType.LESS):
+            self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = VarExpr(self.previous().data)
+
         self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
 
         methods = []
@@ -109,7 +115,7 @@ class Parser:
         
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
     
-        return Class(name, methods)
+        return Class(name, superclass, methods)
 
 
     def statement(self) -> Stmt:
@@ -360,6 +366,11 @@ class Parser:
             return VarExpr(self.previous().data)
         if self.match(TokenType.THIS):
             return ThisExpr(self.previous())
+        if self.match(TokenType.SUPER):
+            keyword = self.previous()
+            self.consume(TokenType.DOT, "Expect '.' after 'super'.")
+            method = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return SuperExpr(keyword, method)
         
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return LiteralExpr(self.previous().data)

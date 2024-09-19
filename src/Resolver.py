@@ -40,6 +40,7 @@ class Resolver:
     
 
     def resolveLocal(self, expr, name):
+        # print(f"DEBUG: resolveLocal() {name}")
         for i in range(len(self.scopes) - 1, -1, -1):
             if name in self.scopes[i]:
                 self.interpreter.resolve(expr, len(self.scopes) - i - 1)

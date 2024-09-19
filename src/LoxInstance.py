@@ -8,8 +8,9 @@ class LoxInstance:
         if name in self.fields:
             return self.fields[name]
         
-        if name in self.klass.methods:
-            method = self.klass.methods[name]
+        method = self.klass.findMethod(name)
+
+        if method != None:
             return method.bind(self)
 
         print(f"Undefined property {name}.")

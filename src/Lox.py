@@ -21,7 +21,6 @@ class Lox:
         interpreter = Interpreter(statements)
         resolver = Resolver(interpreter)
         resolver.resolve()
-        # print(interpreter.locals)
         interpreter.interpret()
 
 

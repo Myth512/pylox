@@ -19,3 +19,7 @@ class Environment():
             environment = environment.enclosing
         
         return environment
+    
+
+    def __str__(self):
+        return f"{self.values} -> {self.enclosing}"

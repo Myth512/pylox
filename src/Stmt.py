@@ -205,21 +205,40 @@ class Return(Stmt):
 
 
     def __str__(self):
-        return f"(return {self.value})"
+        return f"(return {self.value})j"
 
 
 class Class(Stmt):
-    def __init__(self, name, methods):
+    def __init__(self, name, superclass, methods):
         self.name = name
+        self.superclass = superclass
         self.methods = methods
     
 
     def execute(self, interpreter):
+        superclass = None
+        if self.superclass != None:
+            superclass = self.superclass.evaluate(interpreter)
+            if not isinstance(superclass, LoxClass):
+                print("Superclass must be a class.")
+                exit(1)
+
+        interpreter.environment.values[self.name] = None
+
+        if self.superclass != None:
+            interpreter.environment = Environment(interpreter.environment)
+            interpreter.environment.values['super'] = superclass
+
         methods = {}
         for method in self.methods:
             function = LoxFunction(method, interpreter.environment)
             methods[method.name] = function
-        klass = LoxClass(self.name, methods)
+
+        klass = LoxClass(self.name, superclass, methods)
+
+        if self.superclass != None:
+            interpreter.environment = interpreter.environment.enclosing
+
         interpreter.environment.values[self.name] = klass
 
     
@@ -227,12 +246,26 @@ class Class(Stmt):
         resolver.declare(self.name)
         resolver.define(self.name)
 
+        if self.superclass != None and self.superclass.name == self.name:
+            print("A class can't inherit from itself.")
+            exit(1)
+
+        if self.superclass != None:
+            self.superclass.resolve(resolver)
+
+        if self.superclass != None:
+            resolver.beginScope()
+            resolver.scopes[-1]['super'] = True
+
         resolver.beginScope()
         resolver.scopes[-1]['this'] = True
 
         for method in self.methods:
             method.resolve(resolver)
         
+        if self.superclass != None:
+            resolver.endScope()
+
         resolver.endScope()
 
     

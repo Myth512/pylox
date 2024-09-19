@@ -34,6 +34,7 @@ class Interpreter:
     
 
     def resolve(self, expr, depth):
+        # print(f"DEBUG: Interpreter resolve() {expr}")
         self.locals[expr] = depth
     
 

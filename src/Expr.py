@@ -297,3 +297,31 @@ class ThisExpr(Expr):
     def __str__(self):
         return f"(this {self.keyword})"
 
+
+class SuperExpr(Expr):
+    def __init__(self, keyword, method):
+        self.keyword = keyword
+        self.name = 'super'
+        self.method = method
+    
+
+    def evaluate(self, interpreter):
+        distance = interpreter.locals[self.keyword]
+        superclass = interpreter.environment.getAt(distance, 'super')
+        obj = interpreter.environment.getAt(distance - 1, 'this')
+        method = superclass.findMethod(self.method.data)
+
+        if method == None:
+            print(f"Undefined property {method}.")
+            exit(1)
+        
+        return method.bind(obj)
+    
+
+    def resolve(self, resolver):
+        # print("DEBUG: SuperExpr resolve()")
+        resolver.resolveLocal(self.keyword, 'super')
+    
+
+    def __str__(self):
+        return f"(super {self.keyword})"
