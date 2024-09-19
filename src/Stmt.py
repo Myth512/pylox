@@ -60,7 +60,7 @@ class Var(Stmt):
         interpreter.environment.values[self.name] = self.expression.evaluate(interpreter) 
     
 
-    def resolve(self, resolver: Resolver):
+    def resolve(self, resolver):
         resolver.declare(self.name)
         if self.expression:
             self.expression.resolve(resolver)
@@ -197,7 +197,7 @@ class Return(Stmt):
         raise ReturnException(value)
     
 
-    def resolve(self, resolver):
+    def resolve(self, resolver: Resolver) -> None:
         if resolver.currentFunction == "None":
             print("Can't return from top-level code.")
             exit(1)
@@ -215,7 +215,7 @@ class Class(Stmt):
         self.methods = methods
     
 
-    def execute(self, interpreter):
+    def execute(self, interpreter) -> None:
         superclass = None
         if self.superclass != None:
             superclass = self.superclass.evaluate(interpreter)
@@ -242,7 +242,7 @@ class Class(Stmt):
         interpreter.environment.values[self.name] = klass
 
     
-    def resolve(self, resolver):
+    def resolve(self, resolver) -> None:
         resolver.declare(self.name)
         resolver.define(self.name)
 

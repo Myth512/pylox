@@ -59,7 +59,7 @@ class Parser:
         return statements
 
     
-    def declaration(self):
+    def declaration(self) -> Stmt:
         if self.match(TokenType.VAR):
             return self.varDeclaration()
         if self.match(TokenType.FUN):
@@ -69,7 +69,7 @@ class Parser:
         return self.statement()
 
 
-    def varDeclaration(self):
+    def varDeclaration(self) -> Stmt:
         name: str = self.consume(TokenType.IDENTIFIER, "Expect variable name.").data
 
         value = None
@@ -99,7 +99,7 @@ class Parser:
         return Function(name, parameters, body, kind)
     
 
-    def classDeclaration(self):
+    def classDeclaration(self) -> Stmt:
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.").data
 
         superclass = None

@@ -9,17 +9,13 @@ class Lox:
     def run(self, source: str) -> None:
         scanner = Scanner(source)
         tokens = scanner.scan()
-        # print("\nScanner")
-        # for token in tokens:
-        #     print(token)
+
         parser = Parser(tokens)
         statements = parser.parse()
-        # print("\nParser")
-        # for statement in statements:
-        #     print(statement)
-        # print("\nInterpreter")
+
         interpreter = Interpreter(statements)
         resolver = Resolver(interpreter)
+
         resolver.resolve()
         interpreter.interpret()
 
@@ -60,7 +56,7 @@ def main():
     elif argc == 2:
         lox.runFile(sys.argv[1])
     else:
-        print("Wrong usage, correct usage: plox path/to/script")
+        print("Wrong usage, correct usage: pylox path/to/script")
         sys.exit(1)
 
 

@@ -1,4 +1,5 @@
 from enum import Enum
+from Expr import Expr
 
 class Resolver:
     def __init__(self, interpreter):
@@ -8,20 +9,20 @@ class Resolver:
         self.currentFunction = 'None' 
     
 
-    def resolve(self):
+    def resolve(self) -> None:
         for statement in self.interpreter.statements:
             statement.resolve(self)
     
 
-    def beginScope(self):
+    def beginScope(self) -> None:
         self.scopes.append(dict())
     
 
-    def endScope(self):
+    def endScope(self) -> None:
         self.scopes.pop()
     
 
-    def declare(self, name):
+    def declare(self, name: str) -> None:
         if not self.scopes:
             return
         
@@ -32,15 +33,14 @@ class Resolver:
         scope[name] = False
     
 
-    def define(self, name):
+    def define(self, name: str) -> None:
         if not self.scopes:
             return
         
         self.scopes[-1][name] = True
     
 
-    def resolveLocal(self, expr, name):
-        # print(f"DEBUG: resolveLocal() {name}")
+    def resolveLocal(self, expr: Expr, name: str) -> None:
         for i in range(len(self.scopes) - 1, -1, -1):
             if name in self.scopes[i]:
                 self.interpreter.resolve(expr, len(self.scopes) - i - 1)

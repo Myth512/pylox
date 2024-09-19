@@ -1,5 +1,6 @@
 import time
-from Stmt import *
+from Expr import Expr
+from Stmt import Stmt 
 from Environment import *
 from LoxCallable import LoxCallable
 
@@ -25,21 +26,18 @@ class Interpreter:
 
     
     def interpret(self):
-        # try:
-        for statement in self.statements:
-            statement.execute(self)
-        # except Exception as e:
-        #     print("Runtime error", {e})
-        #     exit(1)
+        try:
+            for statement in self.statements:
+                statement.execute(self)
+        except Exception as e:
+            print("Runtime error", {e})
+            exit(1)
     
 
-    def resolve(self, expr, depth):
-        # print(f"DEBUG: Interpreter resolve() {expr}")
+    def resolve(self, expr: Expr, depth: int):
         self.locals[expr] = depth
     
 
-    def lookUpVar(self, name, expr):
-        if (expr not in self.locals):
-            print("unknow reference", name)
+    def lookUpVar(self, name: str, expr: Expr):
         dist = self.locals[expr]
         return self.environment.getAt(dist, name)
